@@ -4,15 +4,21 @@ from utils import rotate_left, normalize_snowflake
 from typing import List, Tuple
 
 
-def generatesnowflakes(
+def generaterandomsnowflakes(
     rows: int = 10, sides: int = 6, int_range: int = 10
 ) -> List[List[int]]:
+    snowflakes_normalized = set()
     snowflakes = []
-    for _ in range(rows):
+    while len(snowflakes) < rows:
         snowflake = []
         for _ in range(sides):
             snowflake.append(random.randint(0, int_range))
-        snowflakes.append(snowflake)
+
+        snowflake_normalized = normalize_snowflake(snowflake)
+        if snowflake_normalized not in snowflakes_normalized:
+            snowflakes.append(snowflake)
+            snowflakes_normalized.add(snowflake_normalized)
+
     return snowflakes
 
 
@@ -24,7 +30,7 @@ def addduplicates(snowflakes: List[List[int]], duplicatescount: int) -> List[Lis
     # select rows to duplicate
     dups = set()
     while len(dups) < duplicatescount:
-        dups.add(random.randint(0, rowscount))
+        dups.add(random.randint(0, rowscount - 1))
 
     while dups:
         row_idx = dups.pop()
@@ -35,15 +41,12 @@ def addduplicates(snowflakes: List[List[int]], duplicatescount: int) -> List[Lis
 
 
 if __name__ == "__main__":
-    snowflakes = generatesnowflakes()
+    snowflakes = generaterandomsnowflakes()
     snowflakes = addduplicates(snowflakes, 1)
 
-    for snowflake in sorted(snowflakes):
-        print(snowflake)
+    triplets = []
+    for i, snowflake in enumerate(sorted(snowflakes)):
+        triplets.append((i, snowflake, normalize_snowflake(snowflake)))
 
-    normalized_snowflakes = []
-    for snowflake in snowflakes:
-        normalized_snowflakes.append(normalize_snowflake(snowflake))
-
-    for normalized_snowflake in sorted(normalized_snowflakes):
-        print(normalized_snowflake)
+    for t in sorted(triplets, key=lambda t: t[2]):
+        print(t[2], t[0], t[1])

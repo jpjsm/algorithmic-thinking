@@ -24,4 +24,4 @@ def normalize_snowflake(lst: List[int]) -> Tuple[int, ...]:
         if lst[i] < lowest:
             lowest, idx = (lst[i], i)
 
-    return tuple(lst[idx:] + lst[:idx])
+    return tuple(lst[idx:] + lst[:idx]) if idx > 0 else tuple(lst)
