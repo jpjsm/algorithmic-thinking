@@ -1,28 +1,34 @@
 import random
 
-from utils import rotate_left, normalize_snowflake
-from typing import List, Tuple
+from typing import List
+from snowflake import Snowflake
+from utils import polinomial, rotate_left
 
 
 def generaterandomsnowflakes(
-    rows: int = 10, sides: int = 6, int_range: int = 10
-) -> List[List[int]]:
-    snowflakes_normalized = set()
+    rows: int = 10,
+) -> List[Snowflake]:
+
+    snowflakes_set = set()
     snowflakes = []
     while len(snowflakes) < rows:
-        snowflake = []
-        for _ in range(sides):
-            snowflake.append(random.randint(0, int_range))
+        flake = []
+        for _ in range(Snowflake.ARMS):
+            flake.append(random.randint(0, Snowflake.ARM_MAX_LENGTH))
 
-        snowflake_normalized = normalize_snowflake(snowflake)
-        if snowflake_normalized not in snowflakes_normalized:
-            snowflakes.append(snowflake)
-            snowflakes_normalized.add(snowflake_normalized)
+        snowflake = Snowflake(flake)
+        snowflake_id = polinomial(
+            snowflake.normalized.snowflake, Snowflake.ARM_MAX_LENGTH + 1
+        )
+
+        if snowflake_id not in snowflakes_set:
+            snowflakes_set.add(snowflake_id)
+            snowflakes.append(snowflake.normalized)
 
     return snowflakes
 
 
-def addduplicates(snowflakes: List[List[int]], duplicatescount: int) -> List[List[int]]:
+def addduplicates(snowflakes: List[Snowflake], duplicatescount: int) -> List[Snowflake]:
     rowscount = len(snowflakes)
     if rowscount < 1 or duplicatescount < 0:
         raise ValueError("'snowflakes' or 'duplicates' has invalid values")
@@ -34,19 +40,27 @@ def addduplicates(snowflakes: List[List[int]], duplicatescount: int) -> List[Lis
 
     while dups:
         row_idx = dups.pop()
-        new_row = list(snowflakes[row_idx])
-        snowflakes.append(rotate_left(new_row, random.randint(1, len(new_row) - 1)))
+        snowflake = snowflakes[row_idx]
+        snowflake_str = str(snowflake)
+        snowflake_arms = list(map(int, snowflake_str.split()))
+        dup_snowflake = Snowflake(
+            rotate_left(snowflake_arms, random.randint(1, Snowflake.ARMS - 1))
+        )
+        snowflakes.append(dup_snowflake)
 
     return snowflakes
 
 
 if __name__ == "__main__":
-    snowflakes = generaterandomsnowflakes()
+    snowflakes = generaterandomsnowflakes(100_000)
+    with open("snowflakes_02_100K.txt", "w") as f:
+        f.write(f"{len(snowflakes)}\n")
+        for snowflake in snowflakes:
+            f.write(str(snowflake) + "\n")
+
+    snowflakes = generaterandomsnowflakes(99_999)
     snowflakes = addduplicates(snowflakes, 1)
-
-    triplets = []
-    for i, snowflake in enumerate(sorted(snowflakes)):
-        triplets.append((i, snowflake, normalize_snowflake(snowflake)))
-
-    for t in sorted(triplets, key=lambda t: t[2]):
-        print(t[2], t[0], t[1])
+    with open("snowflakes_02_100K_with_duplicate.txt", "w") as f:
+        f.write(f"{len(snowflakes)}\n")
+        for snowflake in snowflakes:
+            f.write(str(snowflake) + "\n")
